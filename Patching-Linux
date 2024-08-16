@@ -1,0 +1,29 @@
+#!/bin/bash
+
+export OUT_FILE='/tmp/centos_patching'
+YUM_CMD='/usr/bin/yum'
+HOSTNAME=`hostname`
+REBOOTFLG=$1
+#Checking if root is executing the scipt
+if [[ ${UID} -ne 0 ]];then
+     echo "Please execute the script with the root " >> $OUT_FILE 2>&1
+else
+     echo "script is executuing with the root" >> $OUT_FILE 2>&1
+fi
+Error_fun() {
+  echo "${USER}unable to execute the script on host $HOSTNAME" >> $OUT_FILE 2>&1
+  exit 1
+}
+
+subscription-manager identity >> $OUT_FILE 2>&1
+if [[ $? -ne 0 ]];then
+    echo "Please Register the system with the Satellite server" >> $OUT_FILE 2>&1
+    exit 1
+fi
+echo "patching the system with the latest update" >> $OUT_FILE 2>&1
+$YUM_CMD -y update --exclude=*java*,*jdk*,*postgres* >> $OUT_FILE 2>&1
+if [[ -z $1 ]];then
+   echo "reboot flag is not provided;server will not reboot" >> $OUT_FILE 2>&1
+else
+   echo "reboot flag is provided;rebooting the server" >> $OUT_FILE 2>&1
+fi
